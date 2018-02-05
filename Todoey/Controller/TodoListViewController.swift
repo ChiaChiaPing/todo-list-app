@@ -30,7 +30,17 @@
     /* Read:if let items = defaults.array(forKey: "ToDoListArray") as? [String]  {
         itemArray = items
     } */
-    //
+    //效能及儲存的資料型別有限，如果是要儲存多資料的話，可以用更好的工具 core data
+    //例如：只能存一個物件，存放物件陣列就不行了
+
+/** Codable : another way of local's data in sandbox I/O **/
+    // 首先，要先建立檔案的格式與路徑：FileManager.default.urls(for:.documentDirectory,in: .userDomainMask).first?
+
+    // Encode:寫入 data have to confirm to Encodable
+        // 建立 properlist => 編碼(Encode)(被寫入的資料要遵守Encodable) => 寫入(write)
+        // let encoder=ProperListEncoder() => data=encoder.encode({owndata}) => data.write(to:path)
+    // Decode:讀取  data have to confirm to Decodable
+        //take reference to loadItem() below
 
 
 import UIKit
@@ -39,33 +49,27 @@ class TodoListViewController: UITableViewController {
 
     var itemArray:[Item]=[]
     
-    let defaults = UserDefaults.standard
+    //another way to saving data in locals(for 目錄格式, in 路徑).first?.appendingPathComponent("filename")
+    let dataFilePath=FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first?.appendingPathComponent("Item.plist")
+    
+    //let defaults = UserDefaults.standard
     
     override func viewDidLoad(){
         super.viewDidLoad()
+        print(dataFilePath)
        
-        let newItem=Item()
-        newItem.title="Mike"
-        itemArray.append(newItem)
+        loadItem()
         
-        let newItem1=Item()
-        newItem1.title="Kevin"
-        itemArray.append(newItem1)
-        
-        let newItem2=Item()
-        newItem2.title="Chia"
-        itemArray.append(newItem2)
-        
-        
-        // read local's Data form sandbox's
-        if let items = defaults.object(forKey: "itemArray")  as?  [Item]  { //as:轉型 !強制 ?選擇性
-            itemArray = items
-        }
+        // UserDefaults:read local's Data form sandbox's
+        // if let items = defaults.object(forKey: "itemArray")  as?  [Item]  { //as:轉型 !強制 ?選擇性
+           // itemArray = items
+        //
     
         // Do any additional setup after loading the view, typically from a nib.
         
     }
     
+    /**-------------------------------------------------------------------------**/
     //MARK: Tableview Datasource methods
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return itemArray.count
@@ -84,6 +88,7 @@ class TodoListViewController: UITableViewController {
         
         cell.accessoryType = item.done ?.checkmark :.none
         
+        
         return cell
         
     }
@@ -98,11 +103,13 @@ class TodoListViewController: UITableViewController {
         //uncheck後的動畫，放掉滑鼠後的動畫
         tableView.deselectRow(at: indexPath, animated: true)
         
+        saveItem()// update local's data
         
         //因為上面那個function只會在載入畫面時執行，所以這邊有變動，就要reload(再次呼叫上面)，畫面重整的概念
-        tableView.reloadData()
+        //tableView.reloadData(), 這裡註解是因為 saveItem 已經包含 reloadData
     }
-    
+  
+ /**-------------------------------------------------------------------------**/
     //MARK: Add new Item/work/thing
     // 沒有順序的執行 會一次全部執行
     @IBAction func addButtomPressed(_ sender: UIBarButtonItem) {
@@ -129,15 +136,11 @@ class TodoListViewController: UITableViewController {
                 let temp = Item();
                 temp.title=workNameField.text!
                 self.itemArray.append(temp)
+                self.saveItem()
+                
                 
                 //set key:value 不過set：重新寫入，內容可以存任何形式
-                do{
-                    try self.defaults.set(self.itemArray, forKey: "itemArray")
-                }catch{
-                    print("QQ")
-                }
-                
-                self.tableView.reloadData()
+                //self.defaults.set(self.itemArray, forKey: "itemArray")
             }
         })
         
@@ -146,8 +149,38 @@ class TodoListViewController: UITableViewController {
         
         //alert 假想它是一個viewController 但是是小的視窗 => AlertController
         present(alert, animated: true, completion: nil)
+   
+    }
+   /**-------------------------------------------------------------------------**/
+    //MARK: Model manipulate method
+    //save data : encode 在做check或是 uncheck 應該都要隨時與update local's data
+    func saveItem(){
+        let encoder = PropertyListEncoder() //先建立一個 property list
+        
+        do{
+            //先將資料編碼=>然後再存入
+            let data = try encoder.encode(itemArray)
+            try data.write(to: dataFilePath!)
+        }catch{
+            print("Exception,\(error)")
+        }
+    
+        tableView.reloadData()
+    }
+   
+    //read data : decode //讀取=>解碼
+    func loadItem(){
+        if let data=try? Data.init(contentsOf: dataFilePath!){
+            let decoder = PropertyListDecoder()
+            do{
+                itemArray = try decoder.decode([Item].self, from: data) //再存到自己的
+                // print([Item].self) return Array<Item>
+            }catch{
+                print("Error")
+            }
+        }
         
     }
-
+    
 }
 

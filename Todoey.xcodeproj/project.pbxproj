@@ -48,7 +48,6 @@
 		4272ADB12028406500FE0A69 /* Controller */ = {
 			isa = PBXGroup;
 			children = (
-				427C33BE20205B5300D3F79B /* AppDelegate.swift */,
 				427C33C020205B5300D3F79B /* TodoListViewController.swift */,
 			);
 			path = Controller;
@@ -95,6 +94,7 @@
 				4272ADB12028406500FE0A69 /* Controller */,
 				4272ADB02028405800FE0A69 /* Model */,
 				427C33CA20205B5300D3F79B /* Info.plist */,
+				427C33BE20205B5300D3F79B /* AppDelegate.swift */,
 			);
 			path = Todoey;
 			sourceTree = "<group>";

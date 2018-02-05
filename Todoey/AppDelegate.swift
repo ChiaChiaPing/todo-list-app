@@ -16,10 +16,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
         
+        /**
         //local data's storage location
         //每個device都有一個專屬的UID，而底下每個Application又有它專屬的ID（在那個sandbox）
-        //以simulator為主：資料存在device's UID/.../Application ID / Library / Preference/ .plist file
-        print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
+        //以simulator為主：資料存在device's UID/.../Application ID / Library / Preference/ .plist file**/
+        //print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
     
         print("didFinishedLaunchedWithOptions")
         
