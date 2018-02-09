@@ -8,6 +8,7 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate {
@@ -22,7 +23,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //每個device都有一個專屬的UID，而底下每個Application又有它專屬的ID（在那個sandbox）
         //以simulator為主：資料存在device's UID/.../Application ID / Library / Preference/ .plist file**/
         //print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
-    
+        
+       //print(Realm.Configuration.defaultConfiguration.fileURL)
+        
+        do{
+            let _ = try Realm() // getting Realm Database
+        }catch{
+            print("----\(error)")
+        }
+        
         print("didFinishedLaunchedWithOptions")
         
         return true

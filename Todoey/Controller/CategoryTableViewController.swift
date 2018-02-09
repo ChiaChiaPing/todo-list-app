@@ -8,32 +8,36 @@
 
 import UIKit
 import CoreData
+import RealmSwift
 
 
 class CategoryTableViewController: UITableViewController {
-
-    var categoryArray:[Category]=[]
     
-    let context=(UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext
+    
+    //bed smell：判斷是不好的，但是不是always這樣
+    //強制執行，這樣就不樣做do catch
+    let realm = try! Realm() //Realm()就很像是DB
+    
+    var categoryArray:Results<Category>?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategory()
-        
-        print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
-    
-
     }
 
     //MARK: - Tableview DataSource method
     override func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
-        return categoryArray.count
+        //1是因為要讓他可以呈現No Categories Add yet
+        return categoryArray?.count ?? 1 // ??(假如是nil 做得事情)
+        
     }
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
         let cell=tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
-        cell.textLabel?.text = categoryArray[indexPath.row].name
+        //先判斷categoryArray是不是空直，不是就去取[]的值，如果是就做??後面的事情
+        //有default values ?? 執行上會比較安全且嚴謹
+        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet"
         return cell
     }
   
@@ -57,10 +61,10 @@ class CategoryTableViewController: UITableViewController {
             if categoryName.text! == ""{
                 print("Nothing Add")
             }else{
-                let newCategory = Category(context:self.context)
-                newCategory.name=categoryName.text
-                self.categoryArray.append(newCategory)
-                self.save()
+                let newCategory = Category()
+                newCategory.name=categoryName.text!
+                //self.categoryArray.append(newCategory)  // automatically updateing
+                self.saveCategories(category:newCategory)
             }
         }
         
@@ -84,32 +88,26 @@ class CategoryTableViewController: UITableViewController {
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         let destination = segue.destination as! TodoListViewController
         if let indexPath = tableView.indexPathForSelectedRow{ // 回傳選擇哪一列
-            destination.selectedCategory = categoryArray[indexPath.row]
+            destination.selectedCategory = categoryArray?[indexPath.row]
         }
     }
     
     //MARK: - Data Manipulation Methods
-    func save(){
-        
+    func saveCategories(category:Category){
         do{
-            try context.save()
+            //realm.write有兩種儲存方式，一種是直接在大括號裡面新增物件(資料)
+            //二是建立一個物件，但沒有寫在write，然後透過add物件的方式寫入，但是基本上都要寫在writes()裡面
+            try realm.write { //類似context.save，
+                realm.add(category)
+            }
             tableView.reloadData()
         }catch{
             print("---\(error)")
         }
     }
     func loadCategory(){
-        
-        let request:NSFetchRequest<Category> = Category.fetchRequest()
-        
-        do{
-            categoryArray = try context.fetch(request)
-            tableView.reloadData()
-        }catch{
-            print("--\(error)----")
-        }
-        
+        // 讀取物件
+        categoryArray = realm.objects(Category.self)
+        tableView.reloadData() //Execute Datasource method
     }
-    
-    
 }
