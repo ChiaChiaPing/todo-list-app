@@ -9,9 +9,11 @@
 import UIKit
 import CoreData
 import RealmSwift
+import SwipeCellKit
+import ChameleonFramework
 
 
-class CategoryTableViewController: UITableViewController {
+class CategoryTableViewController: SwipeTableViewController {
     
     
     //bed smell：判斷是不好的，但是不是always這樣
@@ -23,6 +25,8 @@ class CategoryTableViewController: UITableViewController {
     override func viewDidLoad() {
         super.viewDidLoad()
         loadCategory()
+        tableView.separatorStyle = .none //分隔線
+        
     }
 
     //MARK: - Tableview DataSource method
@@ -34,14 +38,32 @@ class CategoryTableViewController: UITableViewController {
     
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell=tableView.dequeueReusableCell(withIdentifier: "categoryCell", for: indexPath)
-        //先判斷categoryArray是不是空直，不是就去取[]的值，如果是就做??後面的事情
-        //有default values ?? 執行上會比較安全且嚴謹
+
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet"
+        
+        // 用字串去取得顏色
+        cell.backgroundColor = UIColor(hexString: (categoryArray?[indexPath.row].color)!)
         return cell
+       
+    }
+    
+    //MARK: Delete Data From Swipe
+    override func updateModel(at indexPath: IndexPath) {
+        if let categoryForDeletion = self.categoryArray?[indexPath.row]{
+            
+            do{
+                try self.realm.write{
+                    self.realm.delete(categoryForDeletion)
+                }
+            }catch{
+                print("-------\(error)")
+            }
+            
+        }
     }
   
-    
+    //MARK: Add new Item
     @IBAction func addButtonPressed(_ sender: UIBarButtonItem) {
         
         var categoryName=UITextField()
@@ -56,13 +78,14 @@ class CategoryTableViewController: UITableViewController {
         
         let action=UIAlertAction(title: "Add", style: .default) {
             (action) in
-            //action帶自己本身
+            //action 帶自己本身
             
             if categoryName.text! == ""{
                 print("Nothing Add")
             }else{
                 let newCategory = Category()
                 newCategory.name=categoryName.text!
+                newCategory.color=UIColor.randomFlat.hexValue()
                 //self.categoryArray.append(newCategory)  // automatically updateing
                 self.saveCategories(category:newCategory)
             }
@@ -80,6 +103,7 @@ class CategoryTableViewController: UITableViewController {
     override func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         
         //去往哪裡，基本上在segue前一定會prepare當作是資料session的橋樑，用identifier去判別往哪一個view
+        
         performSegue(withIdentifier: "goToItem", sender: self) //會自己執行下面的function prepare
         tableView.deselectRow(at: indexPath, animated: true)
     }
@@ -91,6 +115,7 @@ class CategoryTableViewController: UITableViewController {
             destination.selectedCategory = categoryArray?[indexPath.row]
         }
     }
+    
     
     //MARK: - Data Manipulation Methods
     func saveCategories(category:Category){
@@ -105,9 +130,13 @@ class CategoryTableViewController: UITableViewController {
             print("---\(error)")
         }
     }
+    
     func loadCategory(){
         // 讀取物件
-        categoryArray = realm.objects(Category.self)
+        categoryArray = realm.objects(Category.self).sorted(byKeyPath: "name")
         tableView.reloadData() //Execute Datasource method
     }
 }
+
+
+

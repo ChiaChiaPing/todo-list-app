@@ -14,6 +14,7 @@ class Category: Object {
     
     //monitor variable while app is runing
     @objc dynamic var name:String=""
+    @objc dynamic var color:String=""
     // Build Realtionship one to many
     //每一個category有很多items
     let items=List<Item>()

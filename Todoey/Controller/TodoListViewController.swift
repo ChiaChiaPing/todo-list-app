@@ -57,9 +57,9 @@ import UIKit
 import CoreData
 import RealmSwift
 
-class TodoListViewController: UITableViewController {
+class TodoListViewController: SwipeTableViewController {
     
-    //auto-updateing of realm model
+    //auto-updateing of realm model，因為Results<Item>的關係
     var todoItems:Results<Item>? //建立CoreData後，可以假想這個Item就是一張資料表，裡面的每筆資料都代表每個物件
     let realm = try! Realm() //抓DB
     
@@ -98,12 +98,11 @@ class TodoListViewController: UITableViewController {
     // 只會在一開始view load時 會執行 然後執行每一列的內容
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
-        let cell = tableView.dequeueReusableCell(withIdentifier: "ToDoItemCell", for: indexPath)
+        let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row]{
             cell.textLabel?.text = item.title
             cell.accessoryType = item.done ?.checkmark :.none
-            
         }else{
             cell.textLabel?.text="No Items Add"
         }
@@ -133,6 +132,18 @@ class TodoListViewController: UITableViewController {
  /**-------------------------------------------------------------------------**/
     //MARK: Add new Item/work/thing
     // 沒有順序的執行 會一次全部執行
+    override func updateModel(at indexPath: IndexPath) {
+       
+        if let item=todoItems?[indexPath.row]{
+            do{
+                try self.realm.write{
+                    self.realm.delete(item)
+                }
+            }catch{
+                print("-------\(error)")
+            }
+        }
+    }
     @IBAction func addButtomPressed(_ sender: UIBarButtonItem) {
         
         // 建立一個溝通的local variables，直接傳 text不行，傳物件
@@ -198,6 +209,7 @@ class TodoListViewController: UITableViewController {
     //read data 假如沒有帶參數，可以給function預設值，很像python kwargs
     func loadItem(){
         //其實這裡沒有從資料庫抓，只是從指派過來的selectedCategory抓那個List
+        //它sort 只是為了要讓items 蝠賀我們命名的型別Result<Item>
         todoItems = selectedCategory?.items.sorted(byKeyPath: "title", ascending: true)
         tableView.reloadData()
     }
@@ -214,6 +226,7 @@ extension TodoListViewController:UISearchBarDelegate{
         
         //Filter更直觀如過濾Table 去執行query，
         todoItems = todoItems?.filter(NSPredicate(format: "title CONTAINS[cd] %@", searchBar.text!)).sorted(byKeyPath: "dateCreated", ascending: true)
+        
         tableView.reloadData()
         
     }
