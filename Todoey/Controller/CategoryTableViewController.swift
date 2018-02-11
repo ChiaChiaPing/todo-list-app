@@ -27,6 +27,17 @@ class CategoryTableViewController: SwipeTableViewController {
         loadCategory()
         tableView.separatorStyle = .none //分隔線
         
+        //
+        //可以從main storuboard看屬性階層一層一層抓屬性
+       
+        
+    }
+    override func viewWillAppear(_ animated: Bool) {
+        guard let navbar = navigationController?.navigationBar else{fatalError()}
+        
+        navbar.barTintColor=UIColor(hexString:"1D9BF6")
+        navbar.largeTitleTextAttributes=[NSAttributedStringKey.foregroundColor:FlatWhite()]
+        
     }
 
     //MARK: - Tableview DataSource method
@@ -36,14 +47,32 @@ class CategoryTableViewController: SwipeTableViewController {
         
     }
     
+    
     override func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         
 
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
-        cell.textLabel?.text = categoryArray?[indexPath.row].name ?? "No Categories Added Yet"
         
-        // 用字串去取得顏色
-        cell.backgroundColor = UIColor(hexString: (categoryArray?[indexPath.row].color)!)
+        if let categorys = categoryArray?[indexPath.row]{
+            
+            cell.textLabel?.text = categorys.name ?? "No Categories Added Yet"
+            
+            // 用字串去取得顏色
+            guard let categoryColor = UIColor(hexString:categorys.color) else{fatalError()}
+            
+            cell.backgroundColor=categoryColor
+            
+            
+            cell.textLabel?.textColor=ContrastColorOf(categoryColor, returnFlat: true)
+            
+            
+
+        }
+        
+        
+        
+       
+        
         return cell
        
     }

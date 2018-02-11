@@ -52,10 +52,15 @@
     //SQLite：關聯式資料庫管理系統，而persistentContainer 很像SQLlite 裡面 DB的概念
     //NSManageObject就像是：資料表中每一筆資料，每一筆資料在oop就很像是一個物件
 
+// navigationController like a singleton object
+
+//ContrastColorOf 文字與背景成鮮明比對
+
 
 import UIKit
 import CoreData
 import RealmSwift
+import ChameleonFramework
 
 class TodoListViewController: SwipeTableViewController {
     
@@ -63,6 +68,7 @@ class TodoListViewController: SwipeTableViewController {
     var todoItems:Results<Item>? //建立CoreData後，可以假想這個Item就是一張資料表，裡面的每筆資料都代表每個物件
     let realm = try! Realm() //抓DB
     
+    @IBOutlet weak var searchBar: UISearchBar!
     //若selectedCategory 獲得值的話，會執行下面動作，在屬性變化後，做什麼事情，willSet：在屬性變化前做什麼事情
     //指定變數的時候也可以給與值設定
     var selectedCategory:Category?{
@@ -71,6 +77,9 @@ class TodoListViewController: SwipeTableViewController {
             loadItem()
         }
     }
+    
+    
+    
     /**get Access to AppDelegate
    // let context = (UIApplication.shared.delegate as! AppDelegate).persistentContainer.viewContext;
  **/
@@ -84,8 +93,70 @@ class TodoListViewController: SwipeTableViewController {
         
         print(FileManager.default.urls(for: .documentDirectory, in: .userDomainMask))
         loadItem()
+        tableView.separatorStyle = .none
+        
+        
+       
+        
+        
     
-        // Do any additional setup after loading the view, typically from a nib.
+       
+    }
+    
+    //MARK: Do any additional setup after loading the view, typically from a nib.
+    // After implemtnting viewDidLoad後立刻會做的事情
+    //Self.view=> call viewWillAppear to get subview info
+    override func viewWillAppear(_ animated: Bool) {
+        
+        //navBar 中間的文字
+        title=selectedCategory?.name
+        
+         guard let navbar = navigationController?.navigationBar else{fatalError("Navigation Controller does not exist") }
+        //Optional Binding 都是一層一層下去的，每個其實都可以判斷是否空值
+        //color is String
+        guard let color = selectedCategory?.color else{ fatalError()}
+            
+            //Fatal error 類似raise的概念，不過會強制結束
+        
+            
+            
+        guard let colorColor = UIColor(hexString:color) else{fatalError()}
+                
+                //先確認navbar在不在
+                navbar.barTintColor = colorColor
+                // no var，全域變數
+        
+                
+                //tintcolor 是 navigationbar items's color
+                navbar.tintColor=ContrastColorOf(colorColor, returnFlat: true)
+                
+                //find value in texttitle, 有點像是目錄的格式，
+                //navBar 中間文字的屬性取值或設值方式
+                navbar.largeTitleTextAttributes=[NSAttributedStringKey.foregroundColor:ContrastColorOf(colorColor, returnFlat: true)]
+        
+        
+                
+                searchBar.backgroundColor=colorColor
+        
+           
+        
+    }
+    
+    //MARK: viewDidDisappear
+    override func viewDidDisappear(_ animated: Bool){
+        guard let originalcolour = UIColor(hexString:"1D9BF6") else{fatalError()}
+        
+        //這裡不用binding的原因是因為會消失代表他存在
+        navigationController?.navigationBar.barTintColor = originalcolour
+        navigationController?.navigationBar.tintColor=FlatWhite()
+        navigationController?.navigationBar.largeTitleTextAttributes=[NSAttributedStringKey.foregroundColor:FlatWhite()]
+        
+        
+    }
+    
+    //navbar 寫太冗，建立一個function
+    func updateNavBar(withHexCode colorHexCode:String){
+        
     }
     
     /**-------------------------------------------------------------------------**/
@@ -101,7 +172,22 @@ class TodoListViewController: SwipeTableViewController {
         let cell = super.tableView(tableView, cellForRowAt: indexPath)
         
         if let item = todoItems?[indexPath.row]{
+            
             cell.textLabel?.text = item.title
+            
+            //反正會有空值發生的就塞到optional binding
+            // CGFloat(INt/Int)=>會先計算裡面，在cast 所以裡面部會先轉成CGFloat
+            //這邊才計算變化，這裡項目顏色變化是以潛眠的category為主
+            if let color = UIColor(hexString: selectedCategory!.color)?.darken(byPercentage:CGFloat(indexPath.row) / CGFloat(todoItems!.count))
+            {
+                cell.backgroundColor = color
+                cell.textLabel?.textColor = ContrastColorOf(color, returnFlat: true)
+            }
+
+            
+            //可以根據index的順序讓顏色變得更深
+            
+            
             cell.accessoryType = item.done ?.checkmark :.none
         }else{
             cell.textLabel?.text="No Items Add"

@@ -16,6 +16,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     var window: UIWindow?
     
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
+        
+        
+        
         // Override point for customization after application launch.
         
         /**
@@ -24,7 +27,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         //以simulator為主：資料存在device's UID/.../Application ID / Library / Preference/ .plist file**/
         //print(NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).last! as String)
         
-       //print(Realm.Configuration.defaultConfiguration.fileURL)
+       print(Realm.Configuration.defaultConfiguration.fileURL)
         
         do{
             let _ = try Realm() // getting Realm Database
